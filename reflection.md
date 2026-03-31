@@ -79,3 +79,23 @@ I also reviewed `detect_conflicts()` with AI, which suggested swapping the manua
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+---
+
+## 6. Prompt Comparison (Stretch)
+
+**Task tested:** Rescheduling logic for recurring tasks — specifically, how to generate the next `Task` after `mark_complete()` is called on a `daily` or `weekly` task.
+
+**Prompt used (same for both models):**
+> "In a Python pet scheduler, when a task is marked complete, I want to automatically create a copy of it scheduled for the next occurrence. The task has a `frequency` field that can be `daily`, `weekly`, or `twice_daily`. How should I implement this in `mark_complete()`?"
+
+| | Model A: _[fill in model name]_ | Model B: _[fill in model name]_ |
+|---|---|---|
+| **Approach** | _[describe the approach it suggested]_ | _[describe the approach it suggested]_ |
+| **Code style** | _[e.g., used if/elif chain, used a dict lookup, etc.]_ | _[e.g., used if/elif chain, used a dict lookup, etc.]_ |
+| **What was useful** | _[what you kept or learned from it]_ | _[what you kept or learned from it]_ |
+| **What was wrong or off** | _[anything incorrect, over-engineered, or that didn't fit]_ | _[anything incorrect, over-engineered, or that didn't fit]_ |
+
+**Which suggestion did you use and why?**
+
+_[Write 2–3 sentences. Which model gave the more Pythonic or modular answer? Did either one suggest the `_RESCHEDULE_DELTA` dict lookup pattern, or did you arrive at that yourself? What did you change before using it?]_

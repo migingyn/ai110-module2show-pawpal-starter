@@ -1,19 +1,28 @@
 import streamlit as st
 from datetime import time as dt_time
+from pathlib import Path
 from pawpal_system import Owner, Pet, Task, Scheduler
+
+DATA_FILE = "data.json"
 
 
 def _to_minutes(t: dt_time) -> int:
     return t.hour * 60 + t.minute
+
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
 st.title("🐾 PawPal+")
 
 # --- Session State Setup ---
-# Check if owner already exists in the session vault before creating a new one
 if "owner" not in st.session_state:
-    st.session_state.owner = None
+    if Path(DATA_FILE).exists():
+        try:
+            st.session_state.owner = Owner.load_from_json(DATA_FILE)
+        except Exception:
+            st.session_state.owner = None
+    else:
+        st.session_state.owner = None
 
 st.divider()
 
@@ -119,6 +128,17 @@ if st.session_state.owner and st.session_state.owner.pets:
         st.info("No tasks yet. Add one above.")
 else:
     st.info("Add a pet first before scheduling tasks.")
+
+st.divider()
+
+# --- Save / Load ---
+if st.session_state.owner:
+    if st.button("Save data"):
+        try:
+            st.session_state.owner.save_to_json(DATA_FILE)
+            st.success(f"Saved to {DATA_FILE} — your pets and tasks will reload automatically next time.")
+        except Exception as e:
+            st.error(f"Save failed: {e}")
 
 st.divider()
 

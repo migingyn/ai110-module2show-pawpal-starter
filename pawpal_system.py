@@ -412,6 +412,30 @@ class Scheduler:
 
         return next_task
 
+    def find_next_slot(self, preferred_time: int) -> int:
+        """
+        Return the earliest available minute at or after preferred_time that:
+          1. Falls within one of the owner's availability windows, and
+          2. Is not already occupied by a scheduled task.
+
+        Scans forward minute-by-minute up to 1440 minutes from preferred_time,
+        wrapping around midnight if needed. Raises ValueError if no free slot
+        exists within a full 24-hour search.
+        """
+        if not isinstance(preferred_time, int) or not (0 <= preferred_time < 1440):
+            raise ValueError("preferred_time must be an integer between 0 and 1439")
+
+        available = self.owner.get_constraints()["available_hours"]
+        occupied = {t.time for t in self.schedule}
+
+        for offset in range(1440):
+            candidate = (preferred_time + offset) % 1440
+            in_window = any(start <= candidate < end for start, end in available)
+            if in_window and candidate not in occupied:
+                return candidate
+
+        raise ValueError("No available slot found within a full 24-hour period")
+
     def explain(self) -> str:
         """Return a human-readable summary of the day's scheduled tasks."""
         if not self.schedule:
