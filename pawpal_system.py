@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from itertools import combinations
 from typing import Any, Optional
 
 
@@ -215,13 +216,26 @@ class Scheduler:
         return self.schedule
 
     def sort_by_time(self) -> list[Task]:
-        """Return a copy of the schedule sorted chronologically by time."""
+        """
+        Return the schedule sorted by start time rather than priority.
+
+        Useful for a chronological view of the day — what's coming up next —
+        independent of the priority-first ordering that build_schedule() uses.
+        Does not modify self.schedule.
+        """
         if not self.schedule:
             raise RuntimeError("Schedule is empty — run build_schedule() first")
         return sorted(self.schedule, key=lambda t: t.time)
 
     def get_tasks_for_pet(self, pet_name: str) -> list[Task]:
-        """Return scheduled tasks that belong to the named pet."""
+        """
+        Return only the scheduled tasks that belong to the named pet.
+
+        Uses _task_pet_map to trace ownership, so it correctly handles tasks
+        created by _expand_recurring (twice_daily second slots) and tasks
+        added after auto-rescheduling. Raises ValueError if pet_name is not
+        in the owner's pet list.
+        """
         if not self.schedule:
             raise RuntimeError("Schedule is empty — run build_schedule() first")
         known = [p.name for p in self.owner.pets]
@@ -232,26 +246,56 @@ class Scheduler:
                 and self._task_pet_map[id(t)].name == pet_name]
 
     def get_tasks_by_status(self, completed: bool) -> list[Task]:
-        """Return scheduled tasks filtered by completion status."""
+        """
+        Return scheduled tasks filtered by whether they're done or still pending.
+
+        Pass completed=True to see what's been finished, completed=False to see
+        what still needs doing. Stays accurate after mark_complete() calls since
+        it reads the live completed flag on each task rather than a cached state.
+        """
         if not self.schedule:
             raise RuntimeError("Schedule is empty — run build_schedule() first")
         return [t for t in self.schedule if t.completed == completed]
 
     def detect_conflicts(self) -> list[tuple[Task, Task]]:
         """
-        Return pairs of tasks scheduled at the exact same minute.
-        Uses a single pass with a time-keyed dict for O(n) detection.
+        Return every conflicting pair of tasks scheduled at the exact same minute.
+        Groups tasks by time first so 3+ tasks at the same slot all produce pairs.
         """
         if not self.schedule:
             raise RuntimeError("Schedule is empty — run build_schedule() first")
-        seen: dict[int, Task] = {}
-        conflicts: list[tuple[Task, Task]] = []
+        by_time: dict[int, list[Task]] = {}
         for task in self.schedule:
-            if task.time in seen:
-                conflicts.append((seen[task.time], task))
-            else:
-                seen[task.time] = task
-        return conflicts
+            by_time.setdefault(task.time, []).append(task)
+        return [
+            pair
+            for tasks in by_time.values()
+            if len(tasks) > 1
+            for pair in combinations(tasks, 2)
+        ]
+
+    def get_conflict_warnings(self) -> list[str]:
+        """
+        Return human-readable warning strings for every conflicting task pair.
+
+        Each warning identifies the time, the two task descriptions, their owning
+        pets, and whether the clash is within the same pet or across different pets.
+        Never raises — returns an empty list when there are no conflicts.
+        """
+        if not self.schedule:
+            raise RuntimeError("Schedule is empty — run build_schedule() first")
+        warnings: list[str] = []
+        for t1, t2 in self.detect_conflicts():
+            pet1 = self._task_pet_map.get(id(t1))
+            pet2 = self._task_pet_map.get(id(t2))
+            p1_name = pet1.name if pet1 else "unknown"
+            p2_name = pet2.name if pet2 else "unknown"
+            scope = "same pet" if p1_name == p2_name else "different pets"
+            warnings.append(
+                f"WARNING [{scope}]: '{t1.description}' ({p1_name}) and "
+                f"'{t2.description}' ({p2_name}) both scheduled at {t1.format_time()}"
+            )
+        return warnings
 
     def get_tasks_by_priority(self, priority: str) -> list[Task]:
         """Return all scheduled tasks matching the given priority level."""

@@ -25,14 +25,16 @@ Yes, a few things changed once I started actually writing the skeleton. First, I
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
-
+Constraints that my scheduler considers are the owner's available time windows (stored as minute-based tuples), task priority (high, medium, low), and a morning preference flag. I decided priority mattered most because a missed high-priority task like medication is a bigger problem than missing a low-priority enrichment task. Time windows came second since there's no point scheduling something the owner can't actually do. The morning preference was last since it's more of a nice-to-have than a hard rule.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
+One tradeoff my scheduler makes is only flagging conflicts when two tasks share the exact same start minute, rather than checking if their durations overlap. So two 30-minute tasks at 8:00am and 8:15am would slip through undetected even though you couldn't realistically do both. It's a reasonable limitation right now because `Task` doesn't have a duration field, and adding one just to support overlap detection felt like over-engineering for what this app actually needs. If durations get added later, the fix in `detect_conflicts()` is straightforward since you'd just swap the equality check for a range comparison.
 
+I also reviewed `detect_conflicts()` with AI, which suggested swapping the manual nested `range` loops for `itertools.combinations(tasks, 2)`. I kept it because `combinations(tasks, 2)` says exactly what it does ("give me all pairs") so it's genuinely clearer, not just shorter.
 
 ---
 

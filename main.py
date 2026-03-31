@@ -7,8 +7,9 @@ owner.add_pet(pet1)
 owner.add_pet(pet2)
 
 pet1.add_task(Task("Morning walk", 420, "daily", "high"))
+pet1.add_task(Task("Vet check-in", 480, "weekly", "high"))   # <-- same time as Feed/Medication (cross-pet conflict)
 pet1.add_task(Task("Evening play", 1140, "daily", "medium"))
-pet2.add_task(Task("Feed", 480, "daily", "high"))
+pet2.add_task(Task("Feed", 480, "daily", "high"))            # <-- same-pet conflict with Medication
 pet2.add_task(Task("Medication", 480, "twice_daily", "high"))
 
 scheduler = Scheduler(owner)
@@ -29,16 +30,16 @@ for task in scheduler.get_tasks_for_pet("Mittens"):
     print(f"  {task}")
 
 # --- 3. Filter by status ---
-print("\n=== Pending Tasks (before any completions) ===")
+print("\n=== Pending Tasks ===")
 for task in scheduler.get_tasks_by_status(completed=False):
     print(f"  {task}")
 
-# --- 4. Conflict detection ---
-print("\n=== Conflict Detection ===")
-conflicts = scheduler.detect_conflicts()
-if conflicts:
-    for t1, t2 in conflicts:
-        print(f"  CONFLICT: '{t1.description}' and '{t2.description}' both at {t1.format_time()}")
+# --- 4. Conflict warnings (same-pet and cross-pet) ---
+print("\n=== Conflict Warnings ===")
+warnings = scheduler.get_conflict_warnings()
+if warnings:
+    for w in warnings:
+        print(f"  {w}")
 else:
     print("  No conflicts detected.")
 

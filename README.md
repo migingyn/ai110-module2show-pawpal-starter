@@ -22,6 +22,18 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smarter Scheduling
+
+Phase 3 adds four scheduling algorithms that make the app more useful for a real pet owner.
+
+**Sort by time** — `sort_by_time()` returns the day's tasks in chronological order, separate from the priority sort that `build_schedule()` uses internally. Useful when you just want to see what's coming up next rather than what's most important.
+
+**Filter by pet or status** — `get_tasks_for_pet(name)` narrows the schedule down to one pet's tasks, and `get_tasks_by_status(completed)` splits pending vs done. Both work off the live schedule so they stay accurate after tasks are marked complete.
+
+**Recurring task expansion** — Tasks with `frequency="twice_daily"` automatically get a second slot 12 hours later. When you mark a `daily` or `weekly` task complete, the next occurrence is created and added to the schedule using Python's `timedelta` — no manual re-adding needed.
+
+**Conflict detection** — `get_conflict_warnings()` scans for tasks booked at the exact same minute and returns a warning that identifies which pets are involved and whether it's a same-pet or cross-pet clash. It doesn't crash — it just flags the problem so you can decide what to do.
+
 ## Getting started
 
 ### Setup
