@@ -7,6 +7,8 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+The initial UML design should have at least an owner class, pet class, plan class, and a calendar class. The relationship between these classes are that the owner has a pet and constraints -> the pet has needs -> the plan builds tasks off of those needs and owner constraints -> plans are stored onto the calendar. The owner class should contain a string of their name, hour availability in a list, their preferences, and a getter method of their constraints and a method to add a pet to them. The pet class should contain a string of their name, type of pet, and a list of their needs stored as a dict with a getter method of their needs and a method to add needs to the pet. The plan class should contain a string of the owner, the pet, and a list of tasks with a method to build tasks off pet needs. Lastly, the calendar class should contain a dict of plans with a getter method of the plans given the date, a method to add plans to the calendar, and a method to view all the plans of the week.
+
 **b. Design changes**
 
 - Did your design change during implementation?
