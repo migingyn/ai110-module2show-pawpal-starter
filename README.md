@@ -6,7 +6,7 @@
 
 ## Demo
 
-<a href="streamlit_app.png" target="_blank"><img src="streamlit_app.png" alt="PawPal+ Streamlit app screenshot" width="800"/></a>
+<a href="streamlit_app.png"><img src="streamlit_app.png" alt="PawPal+ Streamlit app screenshot" width="800"/></a>
 
 ---
 
