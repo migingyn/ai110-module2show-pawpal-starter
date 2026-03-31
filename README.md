@@ -34,6 +34,34 @@ Phase 3 adds four scheduling algorithms that make the app more useful for a real
 
 **Conflict detection** — `get_conflict_warnings()` scans for tasks booked at the exact same minute and returns a warning that identifies which pets are involved and whether it's a same-pet or cross-pet clash. It doesn't crash — it just flags the problem so you can decide what to do.
 
+## Testing PawPal+
+
+### Run the test suite
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+### What the tests cover
+
+| Area | Tests | Description |
+|---|---|---|
+| **Sorting correctness** | 3 | Verifies high → medium → low priority order and time as a tiebreaker within the same priority |
+| **Recurrence logic** | 5 | Confirms daily tasks reschedule +1 day, weekly tasks +7 days, one-off tasks return `None`, and the new task lands in both the pet's list and the live schedule |
+| **Twice-daily expansion** | 4 | Checks that a `twice_daily` task expands to two slots 720 minutes apart, that the second copy is flagged synthetic (no re-rescheduling), and that midnight wraparound is handled correctly |
+| **Conflict detection** | 4 | Validates that two tasks at the same minute produce one pair, three tasks produce three pairs (C(3,2)), no-conflict cases return an empty list, and warning strings are human-readable |
+| **Error / edge cases** | 8 | Guards against double-completion, orphan tasks, no pets, no pending tasks, all tasks outside the availability window, and calling sort/detect before `build_schedule()` |
+
+**Total: 26 tests — all passing.**
+
+### Confidence Level
+
+**4 / 5 stars**
+
+The core scheduling behaviors (priority sort, recurrence, conflict detection, twice-daily expansion, and availability filtering) are fully covered with both happy-path and error-path tests. One star is withheld because the `prefers_morning` preference branch in `build_schedule()` has no effect on the sort key as currently written, and cross-pet conflict scenarios with more than two pets are not yet tested.
+
+---
+
 ## Getting started
 
 ### Setup
