@@ -45,10 +45,14 @@ I also reviewed `detect_conflicts()` with AI, which suggested swapping the manua
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+The most effective features were Copilot Chat with `#codebase` for test planning and Agent Mode for multi-file changes like adding JSON persistence across `pawpal_system.py` and `app.py` at the same time. Prompts that included context upfront worked best, like describing the full data model before asking a scheduling question instead of asking in isolation. Inline chat was useful for smaller focused tasks like formatting the time input widget.
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+When Copilot helped implement the `prefers_morning` preference in `build_schedule()`, the sort lambda it wrote looked correct but both the morning and non-morning branches were doing the exact same thing, so the flag had no actual effect on the output. I caught it by tracing through the lambda manually and confirmed it with a test. I left the field in the data model but documented the limitation honestly in the README rather than shipping logic that looked functional but wasn't.
 
 ---
 
@@ -59,10 +63,14 @@ I also reviewed `detect_conflicts()` with AI, which suggested swapping the manua
 - What behaviors did you test?
 - Why were these tests important?
 
+I tested priority sort order, twice-daily expansion including midnight wraparound, daily and weekly rescheduling after `mark_complete()`, conflict detection for two and three tasks at the same time, and a full set of error paths like no pets, all tasks outside the availability window, and double-completing a task. These mattered because the scheduling logic has a lot of interdependencies and a bug in one place like `_expand_recurring` would break filtering and conflict detection downstream too.
+
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
+
+I'm confident in the core behaviors since all 26 tests pass and they cover both happy paths and error conditions. If I had more time I'd test the `prefers_morning` flag once it's actually wired up, multi-pet conflict scenarios with three or more pets, and the JSON round-trip to make sure tasks with different frequencies and dates serialize and reload correctly.
 
 ---
 
@@ -72,13 +80,19 @@ I also reviewed `detect_conflicts()` with AI, which suggested swapping the manua
 
 - What part of this project are you most satisfied with?
 
+The scheduling logic turned out cleaner than I expected. Having `Task` as its own class with `mark_complete()` returning the next occurrence kept the rescheduling self-contained, and `_task_pet_map` made it possible to track ownership through expansion and rescheduling without adding a back-reference to every task.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+I'd add a duration field to `Task` so conflict detection could catch overlapping tasks instead of just exact-minute matches. That's the biggest real-world gap right now since two 30-minute tasks 10 minutes apart would slip through. I'd also make `prefers_morning` actually affect the sort key.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+AI is useful for generating options quickly but it doesn't know which option fits your design. The `itertools.combinations` suggestion for conflict detection was genuinely better than what I had, but the `prefers_morning` sort lambda looked correct and wasn't. The difference is that I had to read and reason about both of them myself to know which was which. Using separate chat sessions per phase helped with this because each session stayed focused and I wasn't carrying forward assumptions from earlier conversations that might not apply anymore.
 
 ---
 

@@ -4,6 +4,12 @@
 
 ---
 
+## Demo
+
+<a href="/course_images/ai110/streamlit_app.png" target="_blank"><img src="/course_images/ai110/streamlit_app.png" alt="PawPal+ Streamlit app screenshot" width="800"/></a>
+
+---
+
 ## Classes
 
 PawPal+ is built around four classes that map directly to the real-world concepts of pet care.
