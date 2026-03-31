@@ -1,0 +1,1 @@
+Whenever you implement a function, make sure to use error handling for test cases not print messages
