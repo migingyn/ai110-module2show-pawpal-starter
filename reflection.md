@@ -14,6 +14,8 @@ The initial UML design should have at least an owner class, pet class, plan clas
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
+Yes, a few things changed once I started actually writing the skeleton. First, I changed available_hours in the owner class from a list of strings like "8am-10am" to a list of tuples of integers representing minutes since midnight. The string version looked clean on paper but would've been a pain to work with in the scheduling logic since you'd have to parse the string every time you wanted to compare it against a task duration. Using integers makes the math way simpler. Second, I gave the plan class a date attribute and moved owner and pet into the constructor instead of having them as optional vars that also get passed into build(). Before, those were set in two different places which was confusing. Now the plan knows its date, its owner, and its pet from the start, and build() just does the scheduling work. Third, I kept needs and tasks as plain dicts instead of making them their own classes. It keeps the design to exactly 4 classes and is simpler since needs and tasks don't really need their own methods.
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

@@ -1,41 +1,23 @@
-from dataclasses import dataclass, field
 from typing import Any
-
-
-@dataclass
-class Need:
-    type: str           # e.g. "walk", "feeding", "grooming"
-    duration: int       # minutes
-    priority: str       # "low", "medium", "high"
-    frequency: str      # e.g. "daily", "twice_daily"
-
-
-@dataclass
-class Task:
-    title: str
-    duration: int       # minutes
-    priority: str       # "low", "medium", "high"
-    time: str = ""      # e.g. "8:00am"
-    reason: str = ""    # explanation for why this task was scheduled
 
 
 class Pet:
     def __init__(self, name: str, species: str):
         self.name = name
         self.species = species
-        self.needs: list[Need] = []
+        self.needs: list[dict] = []  # e.g. {"type": "walk", "duration": 20, "priority": "high", "frequency": "daily"}
 
-    def get_needs(self) -> list[Need]:
+    def get_needs(self) -> list[dict]:
         pass
 
-    def add_need(self, need: Need) -> None:
+    def add_need(self, need: dict) -> None:
         pass
 
 
 class Owner:
-    def __init__(self, name: str, available_hours: list[str], preferences: dict[str, Any]):
+    def __init__(self, name: str, available_hours: list[tuple[int, int]], preferences: dict[str, Any]):
         self.name = name
-        self.available_hours = available_hours  # e.g. ["8am-10am", "5pm-7pm"]
+        self.available_hours = available_hours  # list of (start, end) in minutes since midnight, e.g. (480, 600) = 8am-10am
         self.preferences = preferences          # e.g. {"prefers_morning": True}
         self.pet: Pet | None = None
 
@@ -47,12 +29,13 @@ class Owner:
 
 
 class Plan:
-    def __init__(self):
-        self.owner: Owner | None = None
-        self.pet: Pet | None = None
-        self.tasks: list[Task] = []
+    def __init__(self, owner: Owner, pet: Pet, date: str):
+        self.owner = owner
+        self.pet = pet
+        self.date = date    # e.g. "2026-03-30"
+        self.tasks: list[dict] = []  # e.g. {"title": "Morning walk", "duration": 20, "priority": "high", "time": 480, "reason": "..."}
 
-    def build(self, owner: Owner, pet: Pet) -> None:
+    def build(self) -> None:
         pass
 
     def explain(self) -> str:
