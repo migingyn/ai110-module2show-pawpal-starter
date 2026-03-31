@@ -1,46 +1,139 @@
-# PawPal+ (Module 2 Project)
+# PawPal+
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+**PawPal+** is a Streamlit app that helps pet owners build a structured daily care schedule for their pets. It handles task prioritization, recurring reminders, availability filtering, and conflict detection — all in one place.
 
-## Scenario
+---
 
-A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
+## Classes
 
-- Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
-- Consider constraints (time available, priority, owner preferences)
-- Produce a daily plan and explain why it chose that plan
+PawPal+ is built around four classes that map directly to the real-world concepts of pet care.
 
-Your job is to design the system first (UML), then implement the logic in Python, then connect it to the Streamlit UI.
+| Class | Responsibility |
+|---|---|
+| `Task` | Represents one care action (e.g., "Morning walk"). Holds a description, start time, frequency, priority, due date, and completion status. Knows how to mark itself complete and produce the next scheduled occurrence. |
+| `Pet` | Represents an individual pet. Owns a list of `Task` objects and exposes methods to add tasks and retrieve pending ones. |
+| `Owner` | Represents the person caring for the pets. Holds a list of `Pet` objects and defines the daily availability window and preferences used by the scheduler. |
+| `Scheduler` | Orchestrates the full daily plan across all of the owner's pets. Builds, sorts, filters, and conflict-checks the schedule, and handles auto-rescheduling when tasks are marked complete. |
 
-## What you will build
+### Class diagram (Mermaid)
 
-Your final app should:
+```mermaid
+classDiagram
+    class Task {
+        +String description
+        +int time
+        +String frequency
+        +String priority
+        +date due_date
+        +bool completed
+        +bool _synthetic
+        +mark_complete() Task
+        +format_time() str
+    }
 
-- Let a user enter basic owner + pet info
-- Let a user add/edit tasks (duration + priority at minimum)
-- Generate a daily schedule/plan based on constraints and priorities
-- Display the plan clearly (and ideally explain the reasoning)
-- Include tests for the most important scheduling behaviors
+    class Pet {
+        +String name
+        +String species
+        +List~Task~ tasks
+        +add_task(task)
+        +get_tasks() List~Task~
+        +get_pending_tasks() List~Task~
+    }
 
-## Smarter Scheduling
+    class Owner {
+        +String name
+        +List available_hours
+        +Dict preferences
+        +List~Pet~ pets
+        +add_pet(pet)
+        +get_all_tasks() List~Task~
+        +get_constraints() Dict
+    }
 
-Phase 3 adds four scheduling algorithms that make the app more useful for a real pet owner.
+    class Scheduler {
+        +Owner owner
+        +List~Task~ schedule
+        +build_schedule() List~Task~
+        +sort_by_time() List~Task~
+        +get_tasks_for_pet(name) List~Task~
+        +get_tasks_by_status(completed) List~Task~
+        +get_tasks_by_priority(priority) List~Task~
+        +detect_conflicts() List~tuple~
+        +get_conflict_warnings() List~str~
+        +mark_complete(task) Task
+        +explain() str
+        -_expand_recurring(pet, tasks) List~Task~
+    }
 
-**Sort by time** — `sort_by_time()` returns the day's tasks in chronological order, separate from the priority sort that `build_schedule()` uses internally. Useful when you just want to see what's coming up next rather than what's most important.
+    Owner "1" --> "1..*" Pet : owns
+    Pet "1" --> "0..*" Task : has
+    Scheduler "1" --> "1" Owner : schedules for
+    Scheduler "1" --> "0..*" Task : manages schedule
+```
 
-**Filter by pet or status** — `get_tasks_for_pet(name)` narrows the schedule down to one pet's tasks, and `get_tasks_by_status(completed)` splits pending vs done. Both work off the live schedule so they stay accurate after tasks are marked complete.
+---
 
-**Recurring task expansion** — Tasks with `frequency="twice_daily"` automatically get a second slot 12 hours later. When you mark a `daily` or `weekly` task complete, the next occurrence is created and added to the schedule using Python's `timedelta` — no manual re-adding needed.
+## Features
 
-**Conflict detection** — `get_conflict_warnings()` scans for tasks booked at the exact same minute and returns a warning that identifies which pets are involved and whether it's a same-pet or cross-pet clash. It doesn't crash — it just flags the problem so you can decide what to do.
+### Priority-based scheduling
+Tasks are ranked **high → medium → low** when the schedule is generated. Within the same priority level, tasks are sorted by time so earlier tasks always appear first. This ensures the most critical care never gets buried.
 
-## Testing PawPal+
+### Chronological view
+Switch from priority order to a **time-sorted view** at any time. The app calls `sort_by_time()` to give you a chronological "what's next" list — useful at a glance during the day without changing how the schedule was built.
+
+### Availability window filtering
+The owner sets a **daily availability window** (from/until time) when creating their profile. The scheduler automatically filters out any task that falls outside that window before building the schedule, so only tasks you can actually do appear in the plan.
+
+### Recurring task auto-rescheduling
+Mark a `daily` or `weekly` task complete and the **next occurrence is created automatically** — no manual re-adding. The new task's due date is calculated using Python's `timedelta` and inserted directly into the live schedule.
+
+### Twice-daily task expansion
+Tasks set to `twice_daily` are automatically **split into two time slots** 12 hours apart. The second slot is a synthetic copy that tracks completion independently but never triggers its own rescheduling, so the original task stays in control of the recurring cycle.
+
+### Conflict detection and warnings
+Before displaying the schedule, the app scans for **tasks booked at the exact same minute**. Every conflicting pair is surfaced as a warning with the task names, their pets, and whether the clash is within the same pet or across different pets. The app never crashes on a conflict — it just flags the problem so you can decide what to do.
+
+### Per-pet breakdown
+The schedule is filterable **by individual pet** using `get_tasks_for_pet()`. Each pet gets a collapsible panel showing their tasks sorted chronologically, with pending/done counts visible in the header.
+
+### Live status tracking
+`get_tasks_by_status()` reads the live `completed` flag on each task, so the pending/done split stays accurate after any task is marked complete during the session.
+
+---
+
+## Getting started
+
+### Setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Run the demo script
+
+Demonstrates the full system end-to-end in the terminal: two pets, five tasks, sorting, filtering, conflict detection, and auto-rescheduling.
+
+```bash
+python main.py
+```
+
+### Run the Streamlit app
+
+```bash
+streamlit run app.py
+```
 
 ### Run the test suite
 
 ```bash
 python -m pytest tests/test_pawpal.py -v
 ```
+
+---
+
+## Testing PawPal+
 
 ### What the tests cover
 
@@ -59,25 +152,3 @@ python -m pytest tests/test_pawpal.py -v
 **4 / 5 stars**
 
 The core scheduling behaviors (priority sort, recurrence, conflict detection, twice-daily expansion, and availability filtering) are fully covered with both happy-path and error-path tests. One star is withheld because the `prefers_morning` preference branch in `build_schedule()` has no effect on the sort key as currently written, and cross-pet conflict scenarios with more than two pets are not yet tested.
-
----
-
-## Getting started
-
-### Setup
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### Suggested workflow
-
-1. Read the scenario carefully and identify requirements and edge cases.
-2. Draft a UML diagram (classes, attributes, methods, relationships).
-3. Convert UML into Python class stubs (no logic yet).
-4. Implement scheduling logic in small increments.
-5. Add tests to verify key behaviors.
-6. Connect your logic to the Streamlit UI in `app.py`.
-7. Refine UML so it matches what you actually built.
